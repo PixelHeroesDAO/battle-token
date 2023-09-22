@@ -13,3 +13,6 @@
 [submodule "lib/solidity-examples"]
 	path = lib/solidity-examples
 	url = https://github.com/layerzero-labs/solidity-examples
+[submodule "lib/diamond-2-hardhat"]
+	path = lib/diamond-2-hardhat
+	url = https://github.com/mudgen/diamond-2-hardhat
