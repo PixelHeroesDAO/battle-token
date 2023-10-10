@@ -2,12 +2,10 @@
 
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
-
 /**
  * @dev Interface of the IOFT core standard
  */
-interface IOFTCoreUpgradeable is IERC165Upgradeable {
+interface IOFTCore {
     /**
      * @dev estimate send token `_tokenId` to (`_dstChainId`, `_toAddress`)
      * _dstChainId - L0 defined chain id to send tokens too

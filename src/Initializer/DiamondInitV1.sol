@@ -14,6 +14,8 @@ import { IDiamondCut } from "diamond-2-hardhat/interfaces/IDiamondCut.sol";
 import { IERC173 } from "diamond-2-hardhat/interfaces/IERC173.sol";
 import { IERC165 } from "diamond-2-hardhat/interfaces/IERC165.sol";
 import { IOFT } from "layerzero-labs/token/oft/IOFT.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
@@ -31,6 +33,7 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
         ds.supportedInterfaces[type(IOFT).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC20Upgradeable).interfaceId] = true;
 
         // add your own state variables 
         // EIP-2535 specifies that the `diamondCut` function takes two optional 

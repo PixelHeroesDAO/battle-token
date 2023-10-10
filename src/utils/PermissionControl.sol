@@ -252,20 +252,20 @@ abstract contract PermissionControl{
 
     /// @dev Allows the owner to grant `role` for `user`.
     /// If the `user` already has a role, then it will be an no-op for the role.
-    function grantRole(uint8 role, address user) public payable virtual onlyAdmin {
-        _grantRoles(user, 1 << role);
+    function grantRoleBit(uint8 roleBit, address user) public payable virtual onlyAdmin {
+        _grantRoles(user, 1 << roleBit);
     }
 
     /// @dev Allows the owner to remove `role` for `user`.
     /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeRole(uint8 role, address user) public payable virtual onlyAdmin {
-        _removeRoles(user, 1 << role);
+    function revokeRoleBit(uint8 roleBit, address user) public payable virtual onlyAdmin {
+        _removeRoles(user, 1 << roleBit);
     }
 
     /// @dev Allow the caller to remove their own role.
     /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceRole(uint8 role) public payable virtual {
-        _removeRoles(msg.sender, 1 << role);
+    function renounceRoleBit(uint8 roleBit) public payable virtual {
+        _removeRoles(msg.sender, 1 << roleBit);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
