@@ -13,7 +13,8 @@ import { IDiamondLoupe } from "diamond-2-hardhat/interfaces/IDiamondLoupe.sol";
 import { IDiamondCut } from "diamond-2-hardhat/interfaces/IDiamondCut.sol";
 import { IERC173 } from "diamond-2-hardhat/interfaces/IERC173.sol";
 import { IERC165 } from "diamond-2-hardhat/interfaces/IERC165.sol";
-import { IOFT } from "layerzero-labs/token/oft/IOFT.sol";
+import { IOFT } from "../OFT/token/oft/IOFT.sol";
+import { IOFTCore } from "../OFT/token/oft/IOFTCore.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 
@@ -32,6 +33,7 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+        ds.supportedInterfaces[type(IOFTCore).interfaceId] = true;
         ds.supportedInterfaces[type(IOFT).interfaceId] = true;
         ds.supportedInterfaces[type(IERC20Upgradeable).interfaceId] = true;
 
