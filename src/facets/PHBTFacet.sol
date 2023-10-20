@@ -12,10 +12,11 @@ contract PHBTFacet is FacetInitializable, OFT, PermissionControl, ConstantPermis
         __PHBTFacet_init(_lzEndpoint, _admin);
     }
     function __PHBTFacet_init(address _lzEndpoint, address _admin) internal onlyInitializing() {
-        __PHBTFacet_init_unchained(_lzEndpoint, _admin);
+        __PHBTFacet_init_unchained(_admin);
+        __LzApp_init_unchained(_lzEndpoint);
+        __OFT_init_unchained("PHBT", "PHBT");
     }
-    function __PHBTFacet_init_unchained(address _lzEndpoint, address _admin) internal onlyInitializing() {
-        __OFT_init_unchained("PHBT", "PHBT", _lzEndpoint);
+    function __PHBTFacet_init_unchained(address _admin) internal onlyInitializing() {
         _initializeAdmin(_admin);
     }
     function mint(address to, uint256 amount) external onlyRoles(MINTER_ROLE) {

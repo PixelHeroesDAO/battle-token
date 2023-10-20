@@ -4,18 +4,18 @@ pragma solidity ^0.8.2;
 
 //import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "solady/tokens/ERC20.sol";
-import "./IOFT.sol";
+import "./IOFTCore.sol";
 import "./OFTCore.sol";
 import "./OFTStorage.sol";
 
 // override decimal() function is needed
-contract OFT is FacetInitializable, OFTCore, ERC20, IOFT {
+contract OFT is FacetInitializable, OFTCore, ERC20 {
     function __OFT_init(string memory _name, string memory _symbol, address _lzEndpoint) internal onlyInitializing {
         __LzApp_init_unchained(_lzEndpoint);
-        __OFT_init_unchained(_name, _symbol, _lzEndpoint);
+        __OFT_init_unchained(_name, _symbol);
     }
 
-    function __OFT_init_unchained(string memory _name, string memory _symbol, address _lzEndpoint) internal onlyInitializing {
+    function __OFT_init_unchained(string memory _name, string memory _symbol) internal onlyInitializing {
         OFTStorage.layout().name = _name;
         OFTStorage.layout().symbol = _symbol;
     }
@@ -53,7 +53,7 @@ contract OFT is FacetInitializable, OFTCore, ERC20, IOFT {
         _mint(_toAddress, _amount);
         return _amount;
     }
-
+    /*
     function totalSupply() 
         public 
         view 
@@ -110,5 +110,5 @@ contract OFT is FacetInitializable, OFTCore, ERC20, IOFT {
     {
         return ERC20.transferFrom(from, to , amount);
     }
-
+    */
 }

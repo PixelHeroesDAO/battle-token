@@ -17,12 +17,18 @@ import { IOFT } from "../OFT/token/oft/IOFT.sol";
 import { IOFTCore } from "../OFT/token/oft/IOFTCore.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
+import "../facets/PHBTFacet.sol";
 
 // It is expected that this contract is customized if you want to deploy your diamond
 // with data from a deployment script. Use the init function to initialize state variables
 // of your diamond. Add parameters to the init funciton if you need to.
 
 contract DiamondInit {    
+    address public immutable LZ_ENDPOINT;
+
+    constructor (address _lzEndpoint) {
+        LZ_ENDPOINT = _lzEndpoint;
+    }
 
     // You can add parameters to this function in order to pass in 
     // data to set your own state variables
@@ -43,6 +49,7 @@ contract DiamondInit {
         // These arguments are used to execute an arbitrary function using delegatecall
         // in order to set state variables in the diamond during deployment or an upgrade
         // More info here: https://eips.ethereum.org/EIPS/eip-2535#diamond-interface 
+        PHBTFacet(address(this)).initialize(LZ_ENDPOINT, ds.contractOwner);
     }
 
 
