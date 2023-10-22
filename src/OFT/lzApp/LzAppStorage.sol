@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.2;
 
-import "../interfaces/ILayerZeroEndpoint.sol";
+import {ILayerZeroEndpoint} from "layerzero-labs/interfaces/ILayerZeroEndpoint.sol";
 
 library LzAppStorage {
     struct Layout {

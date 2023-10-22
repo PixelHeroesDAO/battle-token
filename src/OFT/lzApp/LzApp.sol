@@ -6,9 +6,9 @@ import "./LzAppStorage.sol";
 //import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../utils/RestrictByOwner.sol";
 import "../../utils/FacetInitializable.sol";
-import "../interfaces/ILayerZeroReceiver.sol";
-import "../interfaces/ILayerZeroUserApplicationConfig.sol";
-import "../interfaces/ILayerZeroEndpoint.sol";
+import {ILayerZeroReceiver} from "layerzero-labs/interfaces/ILayerZeroReceiver.sol";
+import {ILayerZeroUserApplicationConfig} from "layerzero-labs/interfaces/ILayerZeroUserApplicationConfig.sol";
+import {ILayerZeroEndpoint} from "layerzero-labs/interfaces/ILayerZeroEndpoint.sol";
 import "../../utils/BytesLib.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 

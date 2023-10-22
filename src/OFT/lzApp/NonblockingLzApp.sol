@@ -3,7 +3,7 @@
 pragma solidity ^0.8.2;
 
 import "./LzApp.sol";
-import "../../utils/ExcessivelySafeCall.sol";
+import "layerzero-labs/util/ExcessivelySafeCall.sol";
 import "./NonblockingLzAppStorage.sol";
 
 /*
