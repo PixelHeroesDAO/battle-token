@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 //import {Ownable} from "./Ownable.sol";
+import "./PermissionControlBase.sol";
 
 /// @notice Simple multiroles authorization for Diamond Standard derived from OwnableRoles.
 /// @author 0xedy
@@ -9,13 +10,15 @@ pragma solidity ^0.8.4;
 /// @dev While the ownable portion follows [EIP-173](https://eips.ethereum.org/EIPS/eip-173)
 /// for compatibility, the nomenclature for the 2-step ownership handover and roles
 /// may be unique to this codebase.
-abstract contract PermissionControl{
+abstract contract PermissionControl is PermissionControlBase{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                       CUSTOM ERRORS                        */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
+    /* Transfer to base contract.
     /// @dev The caller is not authorized to call the function.
     error Unauthorized();
+    */
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                           EVENTS                           */
@@ -116,6 +119,7 @@ abstract contract PermissionControl{
         _updateRoles(user, roles, false);
     }
 
+    /* Transfer to base contract.
     /// @dev Throws if the sender does not have any of the `roles`.
     function _checkRoles(uint256 roles) internal view virtual {
         /// @solidity memory-safe-assembly
@@ -131,6 +135,7 @@ abstract contract PermissionControl{
             }
         }
     }
+    */
 
     /// @dev Throws if the sender is not the owner,
     /// and does not have any of the `roles`.
@@ -297,7 +302,7 @@ abstract contract PermissionControl{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                         MODIFIERS                          */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
+    /* Transfer to base contract.
     /// @dev Marks a function as only callable by an account with `roles`.
     modifier onlyRoles(uint256 roles) virtual {
         _checkRoles(roles);
@@ -308,7 +313,7 @@ abstract contract PermissionControl{
         _checkRoles(ADMIN_ROLE);
         _;
     }
-
+    */
     /// @dev Marks a function as only callable by the owner or by an account
     /// with `roles`. Checks for ownership first, then lazily checks for roles.
     /*
@@ -331,7 +336,6 @@ abstract contract PermissionControl{
     /*                       ROLE CONSTANTS                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    uint256 public constant ADMIN_ROLE = 1;// << 0;
     // IYKYK
 
     //uint256 internal constant _ROLE_0 = 1 << 0;

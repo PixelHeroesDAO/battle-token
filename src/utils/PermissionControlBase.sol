@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-library LibPermissionControl{
+abstract contract PermissionControlBase{
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                       CUSTOM ERRORS                        */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -13,7 +13,7 @@ library LibPermissionControl{
     /*                       ROLE CONSTANTS                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    uint256 private constant DEFAULT_ADMIN_ROLE = 1;// < 0;
+    uint256 public constant ADMIN_ROLE = 1;// << 0;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                          STORAGE                           */
@@ -61,7 +61,7 @@ library LibPermissionControl{
     }
 
     modifier onlyAdmin() {
-        _checkRoles(DEFAULT_ADMIN_ROLE);
+        _checkRoles(ADMIN_ROLE);
         _;
     }
 
