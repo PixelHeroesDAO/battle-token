@@ -33,6 +33,9 @@ contract TestPHBTInit is Test {
     PHBTFacet public phbtFacetB;
     DiamondInit public initB;
     LZEndpointMock public endpoint;
+
+    uint256 gas;
+
     function setUp() public {
         // Prepare ethers for depolyer
         vm.deal(DEPLOYER_ENDPOINT, 100 ether);
@@ -49,6 +52,8 @@ contract TestPHBTInit is Test {
         phbtFacet = new PHBTFacet();
         init = new DiamondInit(address(endpoint));
         diamond = new Diamond(address(this), address(diamondCutFacet));
+        
+        gas = gasleft();
 
         // Cut diamond facets.
         IDiamondCut.FacetCut[] memory facets = new IDiamondCut.FacetCut[](4);
@@ -145,16 +150,19 @@ contract TestPHBTInit is Test {
             address(init), 
             abi.encodeWithSelector(DiamondInit.init.selector)
         );
-        
+        gas -= gasleft();
     }
     // deploy DiamondCutFacet
 
     function testTrial() public {
         console.log(address(endpoint));
         console.log(endpoint.mockChainId());
-        console.log(PHBTFacet(address(diamond)).name());
-        console.log(PHBTFacet(address(diamond)).symbol());
-        console.log(PHBTFacet(address(diamond)).totalSupply());
+        console.log(PermissionControlFacet(address(diamond)).rolesOf(address(this)));
+        vm.startPrank(address(this));
+        PermissionControlFacet(address(diamond)).grantRoles(address(this), ConstantPermissionRole(address(diamond)).MINTER_ROLE());
+        PHBTFacet(address(diamond)).mint(address(this), 10**18);
+        console.log(PHBTFacet(address(diamond)).balanceOf(address(this)));
+        vm.stopPrank();
     }
 
     function generateSelectors(string[] memory names) internal pure returns(bytes4[] memory selectors) {
