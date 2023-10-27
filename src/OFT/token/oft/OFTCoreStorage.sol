@@ -9,7 +9,7 @@ library OFTCoreStorage {
     }
 
     // keccak256(abi.encode(uint256(keccak256("diamond.storage.OFTCore")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant OFT_CORE_STORAGE = 0xedcbb5c7b85bb8243f473063e424fdb256e18a8304044e441e25f8bc21faba00;
+    bytes32 private constant OFT_CORE_STORAGE = 0x3f3b1835ff8da6cef2a4b4a77c8c56df4092f1422e2ae2fec192e4ed487ccb00;
 
     function layout() internal pure returns (Layout storage $) {
         assembly {
