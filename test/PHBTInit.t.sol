@@ -17,7 +17,10 @@ import "../src/constant/ConstantPermissionRole.sol";
 contract TestPHBTInit is Test {
     string constant FN_ENDPOINT = "./bytecode/Endpoint";
     uint16 constant CHAIN_ID = 1221;
-    address constant DEPLOYER_ENDPOINT = address(0x01);
+    uint16 constant CHAIN_ID_B = 1222;
+    address constant DEPLOYER_ENDPOINT = address(101);
+    address constant DEPLOYER_B = address(103);
+    address constant USER_ALICE = address(104);
     Diamond public diamond;
     DiamondCutFacet public diamondCutFacet;
     DiamondLoupeFacet public diamondLoupeFacet;
@@ -33,16 +36,21 @@ contract TestPHBTInit is Test {
     PHBTFacet public phbtFacetB;
     DiamondInit public initB;
     LZEndpointMock public endpoint;
+    LZEndpointMock public endpointB;
 
     uint256 gas;
 
     function setUp() public {
         // Prepare ethers for depolyer
         vm.deal(DEPLOYER_ENDPOINT, 100 ether);
-
+        vm.deal(DEPLOYER_B, 100 ether);
+        // Prepare ethers for user
+        vm.deal(USER_ALICE, 1 ether);
         // Deploy endpoint
-        vm.prank(DEPLOYER_ENDPOINT);
+        vm.startPrank(DEPLOYER_ENDPOINT);
         endpoint = new LZEndpointMock(CHAIN_ID);
+        endpointB = new LZEndpointMock(CHAIN_ID_B);
+        vm.stopPrank();
 
         // Deploy first contracts group
         diamondCutFacet = new DiamondCutFacet();
@@ -52,7 +60,24 @@ contract TestPHBTInit is Test {
         phbtFacet = new PHBTFacet();
         init = new DiamondInit(address(endpoint));
         diamond = new Diamond(address(this), address(diamondCutFacet));
-        
+
+        vm.startPrank(DEPLOYER_B);
+        {
+            diamondCutFacetB = new DiamondCutFacet();
+            diamondLoupeFacetB = new DiamondLoupeFacet();
+            ownershipFacetB = new OwnershipFacet();
+            permissionFacetB = new PermissionControlFacet();
+            phbtFacetB = new PHBTFacet();
+            initB = new DiamondInit(address(endpointB));
+            diamondB = new Diamond(DEPLOYER_B, address(diamondCutFacetB));
+        }
+        vm.stopPrank();
+
+        // internal bookkeeping for endpoints (only for test)
+        endpoint.setDestLzEndpoint(address(diamondB), address(endpointB));
+        vm.prank(DEPLOYER_B);
+        endpointB.setDestLzEndpoint(address(diamond), address(endpoint));
+
         gas = gasleft();
 
         // Cut diamond facets.
@@ -144,25 +169,136 @@ contract TestPHBTInit is Test {
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: selectors
         });
-        // 
+        // Cut diamond facets for A
         IDiamondCut(address(diamond)).diamondCut(
             facets, 
             address(init), 
             abi.encodeWithSelector(DiamondInit.init.selector)
         );
+
+        // Correct facets declaration.
+        facets[0].facetAddress = address(diamondLoupeFacetB);
+        facets[1].facetAddress = address(ownershipFacetB);
+        facets[2].facetAddress = address(permissionFacetB);
+        facets[3].facetAddress = address(phbtFacetB);
+        // Cut diamond facets for B
+        vm.prank(DEPLOYER_B);
+        IDiamondCut(address(diamondB)).diamondCut(
+            facets, 
+            address(initB), 
+            abi.encodeWithSelector(DiamondInit.init.selector)
+        );
+        
+        // SetUp endpoint
+        
+        // SetUp for layerzero on A
+        PHBTFacet(address(diamond)).setTrustedRemote(
+            CHAIN_ID_B, 
+            abi.encodePacked(address(diamondB), address(diamond))
+        );
+        vm.prank(DEPLOYER_B);
+        PHBTFacet(address(diamondB)).setTrustedRemote(
+            CHAIN_ID, 
+            abi.encodePacked(address(diamond), address(diamondB))
+        );
+        // set in gas
+        PHBTFacet(address(diamond)).setMinDstGas(CHAIN_ID_B, PHBTFacet(address(diamond)).PT_SEND(), 200000);
+        PHBTFacet(address(diamond)).setUseCustomAdapterParams(true);
+
+        vm.startPrank(DEPLOYER_B, DEPLOYER_B);
+        {
+            PHBTFacet(address(diamondB)).setMinDstGas(CHAIN_ID, PHBTFacet(address(diamondB)).PT_SEND(), 200000);
+            PHBTFacet(address(diamondB)).setUseCustomAdapterParams(false);
+        }
+        vm.stopPrank();
+
         gas -= gasleft();
     }
     // deploy DiamondCutFacet
 
     function testTrial() public {
-        console.log(address(endpoint));
-        console.log(endpoint.mockChainId());
-        console.log(PermissionControlFacet(address(diamond)).rolesOf(address(this)));
-        vm.startPrank(address(this));
+
         PermissionControlFacet(address(diamond)).grantRoles(address(this), ConstantPermissionRole(address(diamond)).MINTER_ROLE());
-        PHBTFacet(address(diamond)).mint(address(this), 10**18);
-        console.log(PHBTFacet(address(diamond)).balanceOf(address(this)));
+        assertEq(
+            PermissionControlFacet(address(diamond)).hasAnyRole(
+                address(this), 
+                ConstantPermissionRole(address(diamond)).MINTER_ROLE()
+            ), true
+        );
+
+        PHBTFacet phbtA = PHBTFacet(address(diamond)); 
+        PHBTFacet phbtB = PHBTFacet(address(diamondB));
+        // Mint tokens for default address
+        phbtA.mint(address(this), 10**18);
+        console.log("Default user mints on PHBT-A. Balance:", phbtA.balanceOf(address(this)));
+        assertEq(phbtA.balanceOf(address(this)), 10**18);
+
+        //endpointB.blockNextMsg();
+        //vm.stopPrank();
+        uint16 ver = 1;
+        uint256 bridgeGas = 225000;
+        bytes memory param = abi.encodePacked(ver, bridgeGas);
+        (uint256 nativeFee, ) = phbtA.estimateSendFee(
+            CHAIN_ID_B, 
+            abi.encodePacked(address(this)), 
+            10**17,
+            false,
+            param
+        );
+        //uint256 nativeFee = 12300000;
+        console.log(nativeFee);
+        phbtA.sendFrom{ value: nativeFee }(
+            address(this),
+            CHAIN_ID_B,
+            abi.encodePacked(address(this)),
+            10**17,
+            payable(address(this)),
+            address(0),
+            param
+        );
+        assertEq(phbtA.balanceOf(address(this)), 9 * 10**17);
+        console.log("A / Default", phbtA.balanceOf(address(this)));
+        assertEq(phbtA.balanceOf(USER_ALICE), 0 * 10**17);
+        console.log("A / Alice  ", phbtA.balanceOf(USER_ALICE));
+        assertEq(phbtB.balanceOf(address(this)), 1 * 10**17);
+        console.log("B / Default", phbtB.balanceOf(address(this)));
+        assertEq(phbtB.balanceOf(USER_ALICE), 0 * 10**17);
+        console.log("B / Alice  ", phbtB.balanceOf(USER_ALICE));
+
+        phbtB.transfer(USER_ALICE, 5*10**16);
+        assertEq(phbtB.balanceOf(address(this)), 1 * 10**17 - 5 * 10**16);
+        assertEq(phbtB.balanceOf(USER_ALICE), 5 * 10**16);
+        //    ).to.emit(lzEndpointDstMock, "PayloadStored")
+        vm.startPrank(USER_ALICE, USER_ALICE);
+        {
+            (nativeFee, ) = phbtB.estimateSendFee(
+                CHAIN_ID, 
+                abi.encodePacked(USER_ALICE), 
+                10**16,
+                false,
+                bytes("")
+            );
+            phbtB.sendFrom{ value: nativeFee }(
+                USER_ALICE,
+                CHAIN_ID,
+                abi.encodePacked(USER_ALICE),
+                10**16,
+                payable(USER_ALICE),
+                address(0),
+                bytes("")
+            );
+        }
         vm.stopPrank();
+
+        assertEq(phbtA.balanceOf(address(this)), 9 * 10**17);
+        console.log("A / Default", phbtA.balanceOf(address(this)));
+        assertEq(phbtA.balanceOf(USER_ALICE), 1 * 10**16);
+        console.log("A / Alice  ", phbtA.balanceOf(USER_ALICE));
+        assertEq(phbtB.balanceOf(address(this)), 1 * 10**17 - 5 * 10**16);
+        console.log("B / Default", phbtB.balanceOf(address(this)));
+        assertEq(phbtB.balanceOf(USER_ALICE), 4 * 10**16);
+        console.log("B / Alice  ", phbtB.balanceOf(USER_ALICE));
+
     }
 
     function generateSelectors(string[] memory names) internal pure returns(bytes4[] memory selectors) {
