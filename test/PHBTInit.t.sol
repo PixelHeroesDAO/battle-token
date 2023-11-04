@@ -123,7 +123,7 @@ contract TestPHBTInit is Test {
             functionSelectors: selectors
         });
 
-        selectors = new bytes4[](40);
+        selectors = new bytes4[](44);
         selectors[0] = bytes4(keccak256("DEFAULT_PAYLOAD_SIZE_LIMIT()"));
         selectors[1] = bytes4(keccak256("DOMAIN_SEPARATOR()"));
         selectors[2] = bytes4(keccak256("NO_EXTRA_GAS()"));
@@ -164,6 +164,11 @@ contract TestPHBTInit is Test {
         selectors[37] = phbtFacet.totalSupply.selector;
         selectors[38] = phbtFacet.transfer.selector;
         selectors[39] = phbtFacet.transferFrom.selector;
+        selectors[40] = phbtFacet.getNonce.selector;
+        selectors[41] = phbtFacet.getSigner.selector;
+        selectors[42] = phbtFacet.setSigner.selector;
+        selectors[43] = phbtFacet.mintWithSign.selector;
+
         facets[3] = IDiamondCut.FacetCut({
             facetAddress: address(phbtFacet),
             action: IDiamondCut.FacetCutAction.Add,
