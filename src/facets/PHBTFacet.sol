@@ -70,11 +70,11 @@ contract PHBTFacet is FacetInitializable, OFT, PermissionControlBase, ConstantPe
 
         // Prepare digest.
         bytes32 hashStruct = keccak256(abi.encode(_MINT_WITH_SIGN_HASH, msg.sender, amount, nonce, deadline));
-        bytes32 digest = _hashTypedData(hashStruct);
-        
+        bytes32 hashMessage = _hashTypedData(hashStruct);
+
         // Verify signature.
         address signer = PHBTFacetStorage.layout().signer;
-        if (!signer.isValidSignatureNow(digest, signature)) revert InvalidSignature();
+        if (!signer.isValidSignatureNow(hashMessage, signature)) revert InvalidSignature();
 
         // Increase nonce.
         _increaseNonce(msg.sender);

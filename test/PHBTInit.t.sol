@@ -14,7 +14,13 @@ import "solidity-examples/mocks/LZEndpointMock.sol";
 //import "../src/OFT/interfaces/ILayerZeroEndpoint.sol";
 import "../src/constant/ConstantPermissionRole.sol";
 
-contract TestPHBTInit is Test {
+import "./utils/SignMessage.sol";
+import "solady/utils/LibString.sol";
+
+
+contract TestPHBTInit is Test, SignMessage {
+    using LibString for bytes;
+
     string constant FN_ENDPOINT = "./bytecode/Endpoint";
     uint16 constant CHAIN_ID = 1221;
     uint16 constant CHAIN_ID_B = 1222;
@@ -306,6 +312,77 @@ contract TestPHBTInit is Test {
 
     }
 
+    function test_mintWithSign() public {
+
+        PHBTFacet phbtA = PHBTFacet(address(diamond)); 
+
+        // Grant minter role for contract owner.
+        PermissionControlFacet(address(diamond)).grantRoles(address(this), ConstantPermissionRole(address(diamond)).MINTER_ROLE());
+        assertEq(
+            PermissionControlFacet(address(diamond)).hasAnyRole(
+                address(this), 
+                ConstantPermissionRole(address(diamond)).MINTER_ROLE()
+            ), true
+        );
+
+        // Set signer.
+        phbtA.setSigner(vm.addr(101));
+
+        // Prepare signature.
+        bytes32 domainSeparator = phbtA.DOMAIN_SEPARATOR();
+        bytes32 hashType = keccak256(bytes("MintWithSign(address receiver,uint256 value,uint256 nonce,uint256 deadline)"));
+        uint256 nonce = phbtA.getNonce(vm.addr(1));
+        uint256 deadline = block.timestamp + 100;
+        bytes memory message = abi.encode(
+            domainSeparator,
+            keccak256(abi.encode(
+                hashType,
+                vm.addr(1),
+                10**18,
+                nonce,
+                deadline
+            ))
+        );
+        bytes memory signature = signTypedDataHash(message, 101);
+        console.log("message:", message.toHexString());
+        console.log("signature:", signature.toHexString());
+
+        // Invalid user's minting should be failed.
+        vm.startPrank(vm.addr(2), vm.addr(2));
+        {
+            vm.expectRevert(PHBTFacet.InvalidSignature.selector);
+            phbtA.mintWithSign(10**18, nonce, deadline, signature);
+        }
+        vm.stopPrank();
+
+
+        // Minting should be success.
+        vm.startPrank(vm.addr(1), vm.addr(1));
+        {
+            phbtA.mintWithSign(10**18, nonce, deadline, signature);
+        }
+        vm.stopPrank();
+        assertEq(phbtA.getNonce(vm.addr(1)), nonce + 1);
+        assertEq(phbtA.balanceOf(vm.addr(1)), 10**18);
+
+        // Re-minting with current nonce should be failed.
+        vm.startPrank(vm.addr(1), vm.addr(1));
+        {
+            vm.expectRevert(PHBTFacet.InvalidSignature.selector);
+            phbtA.mintWithSign(10**18, nonce + 1, deadline, signature);
+        }
+        vm.stopPrank();
+
+        // Re-minting with old nonce should be failed.
+        vm.startPrank(vm.addr(1), vm.addr(1));
+        {
+            vm.expectRevert(PHBTFacet.InvalidNonce.selector);
+            phbtA.mintWithSign(10**18, nonce, deadline, signature);
+        }
+        vm.stopPrank();
+
+    }
+
     function generateSelectors(string[] memory names) internal pure returns(bytes4[] memory selectors) {
         uint256 len = names.length;
         selectors = new bytes4[](len);
@@ -317,17 +394,30 @@ contract TestPHBTInit is Test {
             }
         }
     }
-    /*
-    function create2(bytes memory bytecode, uint256 salt) internal returns (address child) {
+    /// @dev Returns the hash of the fully encoded EIP-712 message for this domain,
+    /// given `structHash`, as defined in
+    /// https://eips.ethereum.org/EIPS/eip-712#definition-of-hashstruct.
+    ///
+    /// The hash can be used together with {ECDSA-recover} to obtain the signer of a message:
+    /// ```
+    ///     bytes32 digest = _hashTypedData(keccak256(abi.encode(
+    ///         keccak256("Mail(address to,string contents)"),
+    ///         mailTo,
+    ///         keccak256(bytes(mailContents))
+    ///     )));
+    ///     address signer = ECDSA.recover(digest, signature);
+    /// ```
+    /// This code is modified from Solady (https://github.com/vectorized/solady/blob/main/src/utils/EIP712.sol).
+    function _hashTypedData(bytes32 separator, bytes32 structHash) internal view virtual returns (bytes32 digest) {
+        /// @solidity memory-safe-assembly
         assembly {
-            child := create2(0, add(bytecode, 32), mload(bytecode), salt)
+            // Compute the digest.
+            mstore(0x00, 0x1901000000000000) // Store "\x19\x01".
+            mstore(0x1a, separator) // Store the domain separator.
+            mstore(0x3a, structHash) // Store the struct hash.
+            digest := keccak256(0x18, 0x42)
+            // Restore the part of the free memory slot that was overwritten.
+            mstore(0x3a, 0)
         }
     }
-
-    function precomputeCreate2(bytes memory bytecode, uint256 salt) internal view returns (address){
-        bytes32 bytecodeHash = keccak256(bytecode);
-        bytes32 _data = keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, bytecodeHash));
-        return address(bytes20(_data << 96));
-    }
-    */
 }
