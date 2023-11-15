@@ -6,7 +6,7 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 import "solidity-examples/mocks/LZEndpointMock.sol";
 import "../../src/OFT/token/oft/mocks/OFTMock.sol";
-import "solady/utils/LibClone.sol";
+import "solady/src/utils/LibClone.sol";
 
 contract TestOFT is Test {
 

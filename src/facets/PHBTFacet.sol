@@ -6,7 +6,7 @@ import "../OFT/token/oft/OFT.sol";
 import "../utils/PermissionControl.sol";
 import "../constant/ConstantPermissionRole.sol";
 import "../utils/PermissionControlBase.sol";
-import "solady/utils/SignatureCheckerLib.sol";
+import "solady/src/utils/SignatureCheckerLib.sol";
 
 
 contract PHBTFacet is FacetInitializable, OFT, PermissionControlBase, ConstantPermissionRole {

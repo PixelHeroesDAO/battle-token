@@ -3,7 +3,7 @@
 pragma solidity ^0.8.2;
 
 //import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "solady/tokens/ERC20.sol";
+import "solady/src/tokens/ERC20.sol";
 import "./IOFTCore.sol";
 import "./OFTCore.sol";
 import "./OFTStorage.sol";

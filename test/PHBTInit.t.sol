@@ -15,7 +15,7 @@ import "solidity-examples/mocks/LZEndpointMock.sol";
 import "../src/constant/ConstantPermissionRole.sol";
 
 import "./utils/SignMessage.sol";
-import "solady/utils/LibString.sol";
+import "solady/src/utils/LibString.sol";
 
 
 contract TestPHBTInit is Test, SignMessage {
