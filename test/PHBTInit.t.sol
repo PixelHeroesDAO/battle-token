@@ -109,20 +109,17 @@ contract TestPHBTInit is Test, SignMessage {
             functionSelectors: selectors
         });
 
-        selectors = new bytes4[](13);
+        selectors = new bytes4[](10);
         selectors[0] = bytes4(keccak256("ADMIN_ROLE()"));
         selectors[1] = bytes4(keccak256("MINTER_ROLE()"));
         selectors[2] = bytes4(keccak256("BURNER_ROLE()"));
-        selectors[3] = permissionFacet.grantRoleBit.selector;
-        selectors[4] = permissionFacet.grantRoles.selector;
-        selectors[5] = permissionFacet.hasAllRoles.selector;
-        selectors[6] = permissionFacet.hasAnyRole.selector;
-        selectors[7] = permissionFacet.initializePermission.selector;
-        selectors[8] = permissionFacet.renounceRoleBit.selector;
-        selectors[9] = permissionFacet.renounceRoles.selector;
-        selectors[10] = permissionFacet.revokeRoleBit.selector;
-        selectors[11] = permissionFacet.revokeRoles.selector;
-        selectors[12] = permissionFacet.rolesOf.selector;
+        selectors[3] = permissionFacet.grantRoles.selector;
+        selectors[4] = permissionFacet.hasAllRoles.selector;
+        selectors[5] = permissionFacet.hasAnyRole.selector;
+        selectors[6] = permissionFacet.initializePermission.selector;
+        selectors[7] = permissionFacet.renounceRoles.selector;
+        selectors[8] = permissionFacet.revokeRoles.selector;
+        selectors[9] = permissionFacet.rolesOf.selector;
         facets[2] = IDiamondCut.FacetCut({
             facetAddress: address(permissionFacet),
             action: IDiamondCut.FacetCutAction.Add,

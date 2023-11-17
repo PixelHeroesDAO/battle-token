@@ -60,8 +60,9 @@ contract PermissionControlTest is SoladyTest {
 
     function testGrantRoles() public {
         vm.expectEmit(true, true, true, true);
-        emit RolesUpdated(address(1), 111111);
-        mockPermissionControl.grantRoles(address(1), 111111);
+        uint256 roles = 11111 & ~mockPermissionControl.ADMIN_ROLE();
+        emit RolesUpdated(address(1), roles);
+        mockPermissionControl.grantRoles(address(1), roles);
     }
 
     function testGrantAndRevokeOrRenounceRoles(
@@ -73,14 +74,20 @@ contract PermissionControlTest is SoladyTest {
         uint256 rolesToRevoke
     ) public {
         vm.assume(user != address(this) && rolesToRevoke != 0);
-        // Prevent grant admin role to user
-        rolesToGrant &= ~(uint256(0x01));
+        uint256 adminRole = mockPermissionControl.ADMIN_ROLE();
+        bool grantRolesWithAdmin = (rolesToGrant == adminRole)
+            ? false
+            : (1 == (rolesToGrant & adminRole));
+        bool revokeRolesWithAdmin = (rolesToRevoke == adminRole)
+            ? false
+            : (1 == (rolesToRevoke & adminRole));
         uint256 rolesAfterRevoke = rolesToGrant ^ (rolesToGrant & rolesToRevoke);
 
         assertTrue(rolesAfterRevoke & rolesToRevoke == 0);
         assertTrue((rolesAfterRevoke | rolesToRevoke) & rolesToGrant == rolesToGrant);
-
-        if (granterIsAdmin) {
+        if (grantRolesWithAdmin) {
+            vm.expectRevert(PermissionControlBase.UpdateRolesWithAdmin.selector);
+        } else if (granterIsAdmin) {
             vm.expectEmit(true, true, true, true);
             emit RolesUpdated(user, rolesToGrant);
         } else {
@@ -89,15 +96,26 @@ contract PermissionControlTest is SoladyTest {
         }
         mockPermissionControl.grantRoles(user, rolesToGrant);
 
-        if (!granterIsAdmin) return;
+        if (!granterIsAdmin || grantRolesWithAdmin) return;
 
         assertEq(mockPermissionControl.rolesOf(user), rolesToGrant);
         if (useRenounce) {
-            vm.expectEmit(true, true, true, true);
-            emit RolesUpdated(user, rolesAfterRevoke);
-            vm.prank(user);
-            mockPermissionControl.renounceRoles(rolesToRevoke);
-        } else if (revokerIsAdmin) {
+            if (revokeRolesWithAdmin) {
+                vm.expectRevert(PermissionControlBase.UpdateRolesWithAdmin.selector);
+                vm.prank(user);
+                mockPermissionControl.renounceRoles(rolesToRevoke);
+                return;
+            } else {
+                vm.expectEmit(true, true, true, true);
+                emit RolesUpdated(user, rolesAfterRevoke);
+                vm.prank(user);
+                mockPermissionControl.renounceRoles(rolesToRevoke);
+            }
+        } else if (revokeRolesWithAdmin) {
+            vm.expectRevert(PermissionControlBase.UpdateRolesWithAdmin.selector);
+            mockPermissionControl.revokeRoles(user, rolesToRevoke);
+            return;
+        } else if (revokerIsAdmin || rolesToGrant == adminRole) {
             vm.expectEmit(true, true, true, true);
             emit RolesUpdated(user, rolesAfterRevoke);
             mockPermissionControl.revokeRoles(user, rolesToRevoke);
@@ -118,18 +136,38 @@ contract PermissionControlTest is SoladyTest {
         uint256 rolesToCheck,
         bool useSameRoles
     ) public {
+        uint256 adminRole = mockPermissionControl.ADMIN_ROLE();
         if (useSameRoles) {
             rolesToGrant = rolesToCheck;
         }
         rolesToGrant |= rolesToGrantBrutalizer;
-        mockPermissionControl.grantRoles(user, rolesToGrant);
+        bool grantRolesWithAdmin = (rolesToGrant == adminRole)
+            ? false
+            : (1 == (rolesToGrant & adminRole));
+        if (grantRolesWithAdmin) {
+            vm.expectRevert(PermissionControlBase.UpdateRolesWithAdmin.selector);
+            mockPermissionControl.grantRoles(user, rolesToGrant);
+            return;
+        } else {
+            mockPermissionControl.grantRoles(user, rolesToGrant);
+        }
 
         bool hasAllRoles = (rolesToGrant & rolesToCheck) == rolesToCheck;
         assertEq(mockPermissionControl.hasAllRoles(user, rolesToCheck), hasAllRoles);
     }
 
     function testHasAnyRole(address user, uint256 rolesToGrant, uint256 rolesToCheck) public {
-        mockPermissionControl.grantRoles(user, rolesToGrant);
+        uint256 adminRole = mockPermissionControl.ADMIN_ROLE();
+        bool grantRolesWithAdmin = (rolesToGrant == adminRole)
+            ? false
+            : (1 == (rolesToGrant & adminRole));
+        if (grantRolesWithAdmin) {
+            vm.expectRevert(PermissionControlBase.UpdateRolesWithAdmin.selector);
+            mockPermissionControl.grantRoles(user, rolesToGrant);
+            return;
+        } else {
+            mockPermissionControl.grantRoles(user, rolesToGrant);
+        }
         assertEq(mockPermissionControl.hasAnyRole(user, rolesToCheck), rolesToGrant & rolesToCheck != 0);
     }
 
@@ -188,6 +226,11 @@ contract PermissionControlTest is SoladyTest {
     function testOnlyRolesModifier(address user, uint256 rolesToGrant, uint256 rolesToCheck)
         public
     {
+        // Prevent grant and check admin role
+        uint256 adminRole = mockPermissionControl.ADMIN_ROLE();
+        rolesToGrant &= ~adminRole;
+        rolesToCheck &= ~adminRole;
+        
         mockPermissionControl.grantRoles(user, rolesToGrant);
 
         if (rolesToGrant & rolesToCheck == 0) {

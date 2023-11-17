@@ -238,39 +238,54 @@ abstract contract PermissionControl is PermissionControlBase{
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /// @dev Allows the owner to grant `user` `roles`.
+    /// Admin roles must be granted without any other roles.
     /// If the `user` already has a role, then it will be an no-op for the role.
     function grantRoles(address user, uint256 roles) public payable virtual onlyAdmin {
+        assembly {
+            // If roles has more then 2 roles.
+            if iszero(eq(roles, ADMIN_ROLE)) {
+                // If roles has ADMIN_ROLE.
+                if sub(roles, and(roles, not(ADMIN_ROLE))) {
+                    mstore(0x00, 0x73eddd67) // `UpdateRolesWithAdmin()`.
+                    revert(0x1c, 0x04)
+                }
+            }
+        }
         _grantRoles(user, roles);
     }
 
     /// @dev Allows the owner to remove `user` `roles`.
+    /// Admin roles must be revoked without any other roles.
     /// If the `user` does not have a role, then it will be an no-op for the role.
     function revokeRoles(address user, uint256 roles) public payable virtual onlyAdmin {
+        assembly {
+            // If roles has more then 2 roles.
+            if iszero(eq(roles, ADMIN_ROLE)) {
+                // If roles has ADMIN_ROLE.
+                if sub(roles, and(roles, not(ADMIN_ROLE))) {
+                    mstore(0x00, 0x73eddd67) // `UpdateRolesWithAdmin()`.
+                    revert(0x1c, 0x04)
+                }
+            }
+        }
         _removeRoles(user, roles);
     }
 
     /// @dev Allow the caller to remove their own roles.
+    /// Admin roles must be renounced without any other roles.
     /// If the caller does not have a role, then it will be an no-op for the role.
     function renounceRoles(uint256 roles) public payable virtual {
+        assembly {
+            // If roles has more then 2 roles.
+            if iszero(eq(roles, ADMIN_ROLE)) {
+                // If roles has ADMIN_ROLE.
+                if sub(roles, and(roles, not(ADMIN_ROLE))) {
+                    mstore(0x00, 0x73eddd67) // `UpdateRolesWithAdmin()`.
+                    revert(0x1c, 0x04)
+                }
+            }
+        }
         _removeRoles(msg.sender, roles);
-    }
-
-    /// @dev Allows the owner to grant `role` for `user`.
-    /// If the `user` already has a role, then it will be an no-op for the role.
-    function grantRoleBit(uint8 roleBit, address user) public payable virtual onlyAdmin {
-        _grantRoles(user, 1 << roleBit);
-    }
-
-    /// @dev Allows the owner to remove `role` for `user`.
-    /// If the `user` does not have a role, then it will be an no-op for the role.
-    function revokeRoleBit(uint8 roleBit, address user) public payable virtual onlyAdmin {
-        _removeRoles(user, 1 << roleBit);
-    }
-
-    /// @dev Allow the caller to remove their own role.
-    /// If the caller does not have a role, then it will be an no-op for the role.
-    function renounceRoleBit(uint8 roleBit) public payable virtual {
-        _removeRoles(msg.sender, 1 << roleBit);
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/

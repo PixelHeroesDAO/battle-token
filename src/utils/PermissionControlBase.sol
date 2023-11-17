@@ -9,6 +9,9 @@ abstract contract PermissionControlBase{
     /// @dev The caller is not authorized to call the function.
     error Unauthorized();
 
+    /// @dev Update Admin without other roles.
+    error UpdateRolesWithAdmin();
+
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                       ROLE CONSTANTS                       */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/

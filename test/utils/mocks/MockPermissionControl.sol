@@ -73,15 +73,6 @@ contract MockPermissionControl is PermissionControl {
         ordinals = _ordinalsFromRoles(roles);
     }
 
-    function grantRoleBit(uint8 role, address user) public payable virtual override {
-        super.grantRoleBit(role, _brutalizedAddress(user));
-    }
-
-    function revokeRoleBit(uint8 role, address user) public payable virtual override {
-        super.revokeRoleBit(role, _brutalizedAddress(user));
-    }
-
-
     function _brutalizedAddress(address value) private view returns (address result) {
         /// @solidity memory-safe-assembly
         assembly {
