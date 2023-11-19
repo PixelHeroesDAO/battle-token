@@ -13,6 +13,8 @@ contract PHBTFacet is FacetInitializable, OFT, PermissionControlBase, ConstantPe
     using PHBTFacetStorage for PHBTFacetStorage.Layout;
     using SignatureCheckerLib for address;
 
+    event MintedWithSign(address receiver, uint256 amount, uint256 nonceUsed);
+
     error DeadlinePassed();
     error InvalidNonce();
     error InvalidSignature();
@@ -81,6 +83,9 @@ contract PHBTFacet is FacetInitializable, OFT, PermissionControlBase, ConstantPe
 
         // Mint token.
         _mint(msg.sender, amount);
+
+        // Emit event.
+        emit MintedWithSign(msg.sender, amount, nonce);
 
     }
 
