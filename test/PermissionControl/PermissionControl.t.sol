@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "solady/test/utils/SoladyTest.sol";
 import "solady/src/utils/LibClone.sol";
-import "../utils/mocks/MockPermissionControl.sol";
+import "./mocks/MockPermissionControl.sol";
 
 contract PermissionControlTest is SoladyTest {
     event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
