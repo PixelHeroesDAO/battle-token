@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "../../FacetHelper.t.sol";
+import "../../helpers/FacetHelper.t.sol";
+
 import "src/facets/PHBTFacet.sol";
 import { IOFT } from "src/OFT/token/oft/IOFT.sol";
 import { IOFTCore } from "src/OFT/token/oft/IOFTCore.sol";
@@ -9,9 +10,21 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract PHBTFacetHelper is FacetHelper {
     PHBTFacet public phbtFacet;
+    address public lzEndpoint;
+    address public diamondOwner;
 
-    constructor() {
+    constructor(address endpoint, address owner) {
         phbtFacet = new PHBTFacet();
+        lzEndpoint = endpoint;
+        diamondOwner = owner;
+    }
+
+    function setDiamondOwner(address newOwner) external {
+        diamondOwner = newOwner;
+    }
+
+    function setLzEndpoint(address newEndpoint) external {
+        lzEndpoint = newEndpoint;
     }
 
     function facetAddress() public view override returns(address) {
@@ -78,8 +91,8 @@ contract PHBTFacetHelper is FacetHelper {
         return PHBTFacet.initialize.selector;
     }
 
-    function initializeCalldata() public pure override returns (bytes memory) {
-        return "";
+    function initializeCalldata() public view override returns (bytes memory) {
+        return abi.encode(lzEndpoint, diamondOwner);
     }
 
     function creationCode() public pure override returns (bytes memory) {
